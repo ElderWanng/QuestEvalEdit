@@ -33,7 +33,8 @@ class QuestEval:
         limit_sent: int = 5,
         reduction_multi_refs: Callable = max,
         no_cuda: bool = False,
-        use_cache: bool = True
+        use_cache: bool = True,
+        log_dir = None
     ) -> None:
         """
         Main class for the QuestEval metric
@@ -82,7 +83,7 @@ class QuestEval:
                 "Task is summarization but the weighter is deactivate. Set do_weighter=True to activate it when loading QuestEval."
             )
 
-        self.log_dir = os.path.join(DIR, 'logs')
+        self.log_dir = os.path.join(DIR, 'logs') if log_dir is None else os.path.join(log_dir, 'logs')
         self.hash_files = set(os.listdir(self.log_dir))
         self.use_cache = use_cache
 
