@@ -6,6 +6,7 @@ import logging
 from datasets import load_metric
 import spacy
 import torch
+from tqdm import tqdm
 from questeval import DIR, __version__
 from questeval.utils import (
     API_T2T,
@@ -192,7 +193,7 @@ class QuestEval:
             assert len(sources) == len(hypothesis)
 
         scores = []
-        for ex_idx in range(0, len(hypothesis), batch_size):
+        for ex_idx in tqdm(range(0, len(hypothesis), batch_size)):
             logging.info(f"Total examples: {len(hypothesis)}. Proceeding the examples {ex_idx}")
             batch_sources, batch_list_references = None, None
             if having_sources:
