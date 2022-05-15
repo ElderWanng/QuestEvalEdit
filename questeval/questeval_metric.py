@@ -34,7 +34,7 @@ class QuestEval:
         limit_sent: int = 5,
         reduction_multi_refs: Callable = max,
         no_cuda: bool = False,
-        device: str = None,
+        rank: str = 0,
         use_cache: bool = True,
         log_dir = None
     ) -> None:
@@ -99,7 +99,7 @@ class QuestEval:
         self.qg_prefix = None
         self.qg_batch_size = qg_batch_size
         self.clf_batch_size = clf_batch_size
-        self.device = 'cuda' if (torch.cuda.is_available() and not no_cuda) else 'cpu'
+        self.device = f'cuda:{rank}' if (torch.cuda.is_available() and not no_cuda) else 'cpu'
 
         self.reduction_multi_refs = reduction_multi_refs
         self.do_consistency = do_consistency
