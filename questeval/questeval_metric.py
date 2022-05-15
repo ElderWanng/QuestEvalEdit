@@ -34,6 +34,7 @@ class QuestEval:
         limit_sent: int = 5,
         reduction_multi_refs: Callable = max,
         no_cuda: bool = False,
+        device: str = None,
         use_cache: bool = True,
         log_dir = None
     ) -> None:
