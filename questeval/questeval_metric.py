@@ -101,7 +101,7 @@ class QuestEval:
         self.qg_prefix = None
         self.qg_batch_size = qg_batch_size
         self.clf_batch_size = clf_batch_size
-        self.device = f'cuda:{rank}' if (torch.cuda.is_available() and not no_cuda) else 'cpu'
+        self.device = 'cuda' if (torch.cuda.is_available() and not no_cuda) else 'cpu'
 
         self.reduction_multi_refs = reduction_multi_refs
         self.do_consistency = do_consistency
@@ -170,23 +170,23 @@ class QuestEval:
         return models
 
     def corpus_questeval(
-            self,
-            hypothesis: List[str],
-            sources: List[str] = None,
-            list_references: List[List[str]] = None,
-            batch_size: int = 512
+        self,
+        hypothesis: List[str],
+        sources: List[str] = None,
+        list_references: List[List[str]] = None,
+        batch_size: int = 512
     ) -> Dict:
 
         assert hypothesis is not None
 
         having_sources = (
-                sources is not None
-                and all([isinstance(s, str) for s in sources])  # Only str allowed
+            sources is not None
+            and all([isinstance(s, str) for s in sources])  # Only str allowed
         )
         having_references = (
-                list_references is not None
-                and all([isinstance(r, str) for rs in list_references for r in rs])  # Only str allowed
-                and len(set([len(rs) for rs in list_references])) == 1  # Same number of refs per ex
+            list_references is not None
+            and all([isinstance(r, str) for rs in list_references for r in rs])  # Only str allowed
+            and len(set([len(rs) for rs in list_references])) == 1  # Same number of refs per ex
         )
 
         assert having_sources or having_references, "You need to provide at least correct sources or correct references."
@@ -213,10 +213,10 @@ class QuestEval:
         return result
 
     def _batch_questeval(
-            self,
-            hypothesis: List[str],
-            sources: List[str] = None,
-            list_references: List[List[str]] = None,
+        self,
+        hypothesis: List[str],
+        sources: List[str] = None,
+        list_references: List[List[str]] = None,
     ) -> List[float]:
 
         list_compared_logs = []
@@ -229,8 +229,7 @@ class QuestEval:
 
         # Source
         if sources is not None:
-            src_logs, src_hashes, modified_logs = self._texts2logs(sources, type_logs='src',
-                                                                   d_loaded_logs=d_loaded_logs)
+            src_logs, src_hashes, modified_logs = self._texts2logs(sources, type_logs='src', d_loaded_logs=d_loaded_logs)
             # Asking the questions on the compared text
             modified_logs = max(self._compute_question_answering(src_logs, hyp_logs, 'src', 'hyp'), modified_logs)
             modified_logs = max(self._compute_question_answering(hyp_logs, src_logs, 'hyp', 'src'), modified_logs)
@@ -249,8 +248,7 @@ class QuestEval:
                 "The number of references used to compute the score among the example should  be consistant."
             for i_ref in range(len_refs[0]):
                 references = [refs[i_ref] for refs in list_references]
-                ref_logs, ref_hashes, modified_logs = self._texts2logs(references, type_logs='ref',
-                                                                       d_loaded_logs=d_loaded_logs)
+                ref_logs, ref_hashes, modified_logs = self._texts2logs(references, type_logs='ref', d_loaded_logs=d_loaded_logs)
                 # Asking the questions on the compared text
                 modified_logs = max(self._compute_question_answering(ref_logs, hyp_logs, 'ref', 'hyp'), modified_logs)
                 modified_logs = max(self._compute_question_answering(hyp_logs, ref_logs, 'hyp', 'ref'), modified_logs)
@@ -284,10 +282,10 @@ class QuestEval:
         return scores
 
     def _texts2logs(
-            self,
-            texts: List[str],
-            type_logs: str,
-            d_loaded_logs: Dict
+        self,
+        texts: List[str],
+        type_logs: str,
+        d_loaded_logs: Dict
     ):
         modified_logs = False
 
