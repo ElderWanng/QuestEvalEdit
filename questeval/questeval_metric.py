@@ -19,24 +19,25 @@ from questeval.utils import (
 
 HF_ORGANIZATION = "ThomasNLG"
 
+
 class QuestEval:
     def __init__(
-        self,
-        task: str = "text2text",
-        language: str = "en",
-        answer_types: Tuple = ('NER', 'NOUN'),
-        list_scores: Tuple = ('answerability', 'bertscore', 'f1'),
-        src_preproc_pipe=None,
-        do_weighter: bool = False,
-        do_consistency: bool = False,
-        qg_batch_size: int = 36,
-        clf_batch_size: int = 48,
-        limit_sent: int = 5,
-        reduction_multi_refs: Callable = max,
-        no_cuda: bool = False,
-        rank: str = 0,
-        use_cache: bool = True,
-        log_dir = None
+            self,
+            task: str = "text2text",
+            language: str = "en",
+            answer_types: Tuple = ('NER', 'NOUN'),
+            list_scores: Tuple = ('answerability', 'bertscore', 'f1'),
+            src_preproc_pipe=None,
+            do_weighter: bool = False,
+            do_consistency: bool = False,
+            qg_batch_size: int = 36,
+            clf_batch_size: int = 48,
+            limit_sent: int = 5,
+            reduction_multi_refs: Callable = max,
+            no_cuda: bool = False,
+            rank: str = 0,
+            use_cache: bool = True,
+            log_dir=None
     ) -> None:
         """
         Main class for the QuestEval metric
@@ -84,8 +85,9 @@ class QuestEval:
             logging.warning(
                 "Task is summarization but the weighter is deactivate. Set do_weighter=True to activate it when loading QuestEval."
             )
-
-        self.log_dir = os.path.join(DIR, 'logs') if log_dir is None else os.path.join(log_dir, 'logs')
+        log_dir = os.path.join(DIR, 'logs') if log_dir is None else log_dir
+        os.makedirs(log_dir, exist_ok=True)
+        self.log_dir = log_dir
         self.hash_files = set(os.listdir(self.log_dir))
         self.use_cache = use_cache
 
@@ -138,7 +140,7 @@ class QuestEval:
             models['hyp']['QA'] = f'{HF_ORGANIZATION}/t5-qa_squad2neg-en'
             models['hyp']['QG'] = f'{HF_ORGANIZATION}/t5-qg_squad1-en'
         else:
-            raise("Multilingual evaluation not handled yet.")
+            raise ("Multilingual evaluation not handled yet.")
 
         # (if) multimodal sources
         if self.task == "data2text":
@@ -151,7 +153,7 @@ class QuestEval:
             for task in models[modality].keys():
                 if not type(models[modality][task]) == str:
                     continue
-                models[modality][task]= self.get_model(model_name=models[modality][task])
+                models[modality][task] = self.get_model(model_name=models[modality][task])
 
         # Loading the weighter
         models['Weighter'] = None
@@ -168,23 +170,23 @@ class QuestEval:
         return models
 
     def corpus_questeval(
-        self,
-        hypothesis: List[str],
-        sources: List[str] = None,
-        list_references: List[List[str]] = None,
-        batch_size: int = 512
+            self,
+            hypothesis: List[str],
+            sources: List[str] = None,
+            list_references: List[List[str]] = None,
+            batch_size: int = 512
     ) -> Dict:
 
         assert hypothesis is not None
 
         having_sources = (
-            sources is not None
-            and all([isinstance(s, str) for s in sources])  # Only str allowed
+                sources is not None
+                and all([isinstance(s, str) for s in sources])  # Only str allowed
         )
         having_references = (
-            list_references is not None
-            and all([isinstance(r, str) for rs in list_references for r in rs])  # Only str allowed
-            and len(set([len(rs) for rs in list_references])) == 1  # Same number of refs per ex
+                list_references is not None
+                and all([isinstance(r, str) for rs in list_references for r in rs])  # Only str allowed
+                and len(set([len(rs) for rs in list_references])) == 1  # Same number of refs per ex
         )
 
         assert having_sources or having_references, "You need to provide at least correct sources or correct references."
@@ -211,10 +213,10 @@ class QuestEval:
         return result
 
     def _batch_questeval(
-        self,
-        hypothesis: List[str],
-        sources: List[str] = None,
-        list_references: List[List[str]] = None,
+            self,
+            hypothesis: List[str],
+            sources: List[str] = None,
+            list_references: List[List[str]] = None,
     ) -> List[float]:
 
         list_compared_logs = []
@@ -227,7 +229,8 @@ class QuestEval:
 
         # Source
         if sources is not None:
-            src_logs, src_hashes, modified_logs = self._texts2logs(sources, type_logs='src', d_loaded_logs=d_loaded_logs)
+            src_logs, src_hashes, modified_logs = self._texts2logs(sources, type_logs='src',
+                                                                   d_loaded_logs=d_loaded_logs)
             # Asking the questions on the compared text
             modified_logs = max(self._compute_question_answering(src_logs, hyp_logs, 'src', 'hyp'), modified_logs)
             modified_logs = max(self._compute_question_answering(hyp_logs, src_logs, 'hyp', 'src'), modified_logs)
@@ -246,7 +249,8 @@ class QuestEval:
                 "The number of references used to compute the score among the example should  be consistant."
             for i_ref in range(len_refs[0]):
                 references = [refs[i_ref] for refs in list_references]
-                ref_logs, ref_hashes, modified_logs = self._texts2logs(references, type_logs='ref', d_loaded_logs=d_loaded_logs)
+                ref_logs, ref_hashes, modified_logs = self._texts2logs(references, type_logs='ref',
+                                                                       d_loaded_logs=d_loaded_logs)
                 # Asking the questions on the compared text
                 modified_logs = max(self._compute_question_answering(ref_logs, hyp_logs, 'ref', 'hyp'), modified_logs)
                 modified_logs = max(self._compute_question_answering(hyp_logs, ref_logs, 'hyp', 'ref'), modified_logs)
@@ -280,10 +284,10 @@ class QuestEval:
         return scores
 
     def _texts2logs(
-        self,
-        texts: List[str],
-        type_logs: str,
-        d_loaded_logs: Dict
+            self,
+            texts: List[str],
+            type_logs: str,
+            d_loaded_logs: Dict
     ):
         modified_logs = False
 
@@ -306,10 +310,10 @@ class QuestEval:
         return logs, logs_hashes, modified_logs
 
     def _load_logs(
-        self,
-        texts: List,
-        type_logs: str,
-        d_loaded_logs: Dict
+            self,
+            texts: List,
+            type_logs: str,
+            d_loaded_logs: Dict
     ) -> Tuple[List[Dict], List[str]]:
         logs, log_hashs = [], []
 
@@ -318,12 +322,12 @@ class QuestEval:
             if log_hash not in d_loaded_logs:
                 log = {'type': type_logs, 'text': text, 'self': dict(), 'asked': dict()}
                 if not (self.use_cache and log_hash in self.hash_files and text != ""):
-                    temp=1
+                    temp = 1
                 if self.use_cache and log_hash in self.hash_files and text != "":
                     cached_path = os.path.join(self.log_dir, log_hash)
                     try:
                         with open(cached_path, 'r') as f_log:
-                            tmp  = json.load(f_log)
+                            tmp = json.load(f_log)
                             assert all([k in log for k in ['type', 'text', 'self', 'asked']])
                             assert isinstance(log['type'], str)
                             assert isinstance(log['text'], str)
@@ -345,9 +349,9 @@ class QuestEval:
         return logs, log_hashs
 
     def _serialize_logs(
-        self,
-        logs: List[Dict],
-        hashes: List[str]
+            self,
+            logs: List[Dict],
+            hashes: List[str]
     ) -> None:
         for log, hash in zip(logs, hashes):
             with open(os.path.join(self.log_dir, hash), 'w') as outfile:
@@ -363,9 +367,9 @@ class QuestEval:
         return log
 
     def _compute_answer_selection(
-        self,
-        logs: List[Dict],
-        type_logs: str
+            self,
+            logs: List[Dict],
+            type_logs: str
     ) -> None:
         for answer_type in self._get_answer_types(type_logs):
             to_do_exs, to_do_exs_idxs = [], []
@@ -383,9 +387,9 @@ class QuestEval:
         return len(to_do_exs) != 0
 
     def _compute_question_generation(
-        self,
-        logs: List[Dict],
-        type_logs: str
+            self,
+            logs: List[Dict],
+            type_logs: str
     ) -> None:
         name_model_qg = self._get_qg_hash(type_logs)
 
@@ -412,11 +416,11 @@ class QuestEval:
         return len(to_do_exs) != 0
 
     def _compute_question_answering(
-        self,
-        logs_1: Dict,
-        logs_2: Dict,
-        type_logs_1: str,
-        type_logs_2: str
+            self,
+            logs_1: Dict,
+            logs_2: Dict,
+            type_logs_1: str,
+            type_logs_2: str
     ) -> None:
         """
         asking questions from logs_2 on text from logs_1
@@ -467,9 +471,9 @@ class QuestEval:
         return len(to_do_exs) != 0
 
     def _compute_answer_similarity_scores(
-        self,
-        logs: Dict,
-        type_logs: str
+            self,
+            logs: Dict,
+            type_logs: str
     ) -> None:
         """
         filling the similarity scores
@@ -520,9 +524,9 @@ class QuestEval:
         return modified_logs
 
     def _compute_weighter(
-        self,
-        logs: Dict,
-        type_logs: str
+            self,
+            logs: Dict,
+            type_logs: str
     ) -> None:
         """
         weighting the probability that a question is asking about important content or not (see https://arxiv.org/abs/2103.12693)
@@ -559,12 +563,12 @@ class QuestEval:
         return len(to_do_exs) != 0
 
     def _get_answer_types(self, type_logs: str) -> str:
-        return ('TABLE', ) if type_logs == 'src' and self.task == 'data2text' else self.answer_types
+        return ('TABLE',) if type_logs == 'src' and self.task == 'data2text' else self.answer_types
 
     def _predict_self_answers(
-        self,
-        texts: List,
-        answer_type: str
+            self,
+            texts: List,
+            answer_type: str
     ) -> List[str]:
         if self.limit_sent is not None:
             list_sentences = [sentencize(text, self.spacy_pipeline) for text in texts]
@@ -583,9 +587,9 @@ class QuestEval:
         return list_answers
 
     def _predict_questions(
-        self,
-        to_do_exs: List[tuple],
-        type_logs: str
+            self,
+            to_do_exs: List[tuple],
+            type_logs: str
     ) -> List[str]:
         model_QG = self.models[type_logs]['QG']
 
@@ -596,9 +600,9 @@ class QuestEval:
         return question_texts
 
     def _predict_answers(
-        self,
-        to_do_exs: List[tuple],
-        type_logs: str
+            self,
+            to_do_exs: List[tuple],
+            type_logs: str
     ) -> Tuple[List[float], List[str]]:
         model_QA = self.models[type_logs]['QA']
         formated_inputs = [f'{question} {self.sep} {context}' for question, context in to_do_exs]
@@ -618,9 +622,9 @@ class QuestEval:
         return probs
 
     def _calculate_score_from_logs(
-        self,
-        hyp_log: List[Dict],
-        compared_logs: List[List[Dict]]
+            self,
+            hyp_log: List[Dict],
+            compared_logs: List[List[Dict]]
     ) -> float:
 
         scores = []
@@ -635,9 +639,9 @@ class QuestEval:
         return self.reduction_multi_refs(scores)
 
     def _base_score(
-        self,
-        questioned_log: Dict,
-        compared_log: Dict
+            self,
+            questioned_log: Dict,
+            compared_log: Dict
     ) -> float:
         regularizer = lambda list_score, list_reg: np.multiply(scores, list_reg).tolist()
         list_borned = lambda a_list: [max(min(1, x), 0) for x in a_list]
@@ -679,10 +683,10 @@ class QuestEval:
         return final_score
 
     def _get_scores(
-        self,
-        questioned_log: List[Dict],
-        compared_log: List[Dict],
-        type_score: str
+            self,
+            questioned_log: List[Dict],
+            compared_log: List[Dict],
+            type_score: str
     ) -> List[float]:
 
         name_model_qg = self._get_qg_hash(compared_log['type'])
@@ -708,7 +712,7 @@ class QuestEval:
 
         return scores
 
-    def get_model(self, model_name: str,):
+    def get_model(self, model_name: str, ):
         keep_score_idx = None
 
         if 't5' in model_name.lower():
@@ -740,10 +744,10 @@ class QuestEval:
         return model
 
     def set_model(
-        self,
-        key: str,
-        task: str,
-        model_name: str,
+            self,
+            key: str,
+            task: str,
+            model_name: str,
     ) -> None:
 
         assert key in [None, 'hyp', 'src', 'ref']
