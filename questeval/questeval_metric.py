@@ -1,3 +1,4 @@
+import datetime
 from typing import List, Tuple, Dict, Callable
 import os
 import json
@@ -108,7 +109,9 @@ class QuestEval:
         self.do_weighter = do_weighter
         self.list_scores = list_scores
         if 'bertscore' in self.list_scores:
-            self.metric_BERTScore = load_metric("bertscore")
+            now = datetime.datetime.now()
+            dirname = now.strftime("%m-%d-%Y-%H-%M-%S-%S")
+            self.metric_BERTScore = load_metric("bertscore", experiment_id=dirname)
 
         if language == 'en':
             try:
